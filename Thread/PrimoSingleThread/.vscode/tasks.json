@@ -1,0 +1,31 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Compilar Java",
+      "type": "shell",
+      "command": "javac",
+      "args": [
+        "-d",
+        "bin",
+        "src/MainPrimosSingle.java"
+      ],
+      "group": "build"
+    },
+    {
+      "label": "Executar Java",
+      "type": "shell",
+      "command": "java",
+      "args": [
+        "-cp",
+        "bin",
+        "MainPrimosSingle"
+      ],
+      "dependsOn": "Compilar Java",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    }
+  ]
+}
