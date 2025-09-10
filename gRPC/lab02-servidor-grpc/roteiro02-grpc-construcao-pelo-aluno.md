@@ -3268,6 +3268,16 @@ npm install
 # Executar servidor principal
 npm start
 
+node server.js 50051
+
+node server.js 50052
+
+node server.js 50053
+
+
+netstat -ano | findstr 5005
+
+
 # Executar cliente de exemplo
 npm run client
 
