@@ -111,10 +111,16 @@ class GrpcServer {
 }
 
 // Inicialização
+// Inicialização
 if (require.main === module) {
-    const port = parseInt(process.env.GRPC_PORT) || 50051;
+    // Prioridade: argumento > variável de ambiente > padrão
+    const portArg = parseInt(process.argv[2]); // pega o argumento do node
+    const portEnv = parseInt(process.env.GRPC_PORT);
+    const port = portArg || portEnv || 50051;
+
     const server = new GrpcServer(port);
     server.start();
 }
+
 
 module.exports = GrpcServer;
