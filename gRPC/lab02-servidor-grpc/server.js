@@ -3,7 +3,7 @@ const ProtoLoader = require('./utils/protoLoader');
 const AuthService = require('./services/AuthService');
 const TaskService = require('./services/TaskService');
 const database = require('./database/database');
-const Auth = require('./middleware/auth');
+
 
 /**
  * Servidor gRPC
@@ -27,22 +27,25 @@ class GrpcServer {
 
     async initialize() {
         try {
-            // Inicializar banco de dados
             await database.init();
 
             // Carregar definições dos protobuf
-            const authProto = this.protoLoader.loadProto('auth_service.proto', 'auth');
-            const taskProto = this.protoLoader.loadProto('task_service.proto', 'tasks');
+            const { serviceDefinition: authServiceDefinition } = this.protoLoader.loadProto('auth_service.proto', 'auth');
+            const { serviceDefinition: taskServiceDefinition } = this.protoLoader.loadProto('task_service.proto', 'tasks');
+
+            // Debug: verificar keys do service definition
+            console.log('AuthServiceDefinition keys:', Object.keys(authServiceDefinition));
+            console.log('TaskServiceDefinition keys:', Object.keys(taskServiceDefinition));
 
             // Registrar serviços de autenticação
-            this.server.addService(authProto.AuthService.service, {
+            this.server.addService(authServiceDefinition, {
                 Register: this.authService.register.bind(this.authService),
                 Login: this.authService.login.bind(this.authService),
                 ValidateToken: this.authService.validateToken.bind(this.authService)
             });
 
             // Registrar serviços de tarefas
-            this.server.addService(taskProto.TaskService.service, {
+            this.server.addService(taskServiceDefinition, {
                 CreateTask: this.taskService.createTask.bind(this.taskService),
                 GetTasks: this.taskService.getTasks.bind(this.taskService),
                 GetTask: this.taskService.getTask.bind(this.taskService),
@@ -60,12 +63,12 @@ class GrpcServer {
         }
     }
 
-    async start(port = 50051) {
+      async start(port = 50051) {
         try {
             await this.initialize();
 
             const serverCredentials = grpc.ServerCredentials.createInsecure();
-            
+
             this.server.bindAsync(`0.0.0.0:${port}`, serverCredentials, (error, boundPort) => {
                 if (error) {
                     console.error('❌ Falha ao iniciar servidor:', error);
@@ -106,7 +109,7 @@ class GrpcServer {
 // Inicialização
 if (require.main === module) {
     const server = new GrpcServer();
-    const port = process.env.GRPC_PORT || 50051;
+    const port = parseInt(process.env.GRPC_PORT) || 50051;
     server.start(port);
 }
 

@@ -1,5 +1,6 @@
 const grpc = require('@grpc/grpc-js');
 const ProtoLoader = require('./utils/protoLoader');
+const address = `dns:///${this.servers.join(',')}`;
 
 /**
  * Cliente gRPC de Exemplo
@@ -9,7 +10,7 @@ const ProtoLoader = require('./utils/protoLoader');
  */
 
 class GrpcClient {
-    constructor(servers = ['localhost:50051','localhost:50052','localhost:50053']) {
+    constructor(servers = ['localhost:50051', 'localhost:50052', 'localhost:50053']) {
         this.servers = servers;
         this.protoLoader = new ProtoLoader();
         this.authClient = null;
@@ -26,15 +27,23 @@ class GrpcClient {
 
             // Criar clientes com round-robin
             this.authClient = new authProto.AuthService(
-                this.servers.join(','), 
+                address,
                 credentials,
-                { 'grpc.lb_policy_name': 'round_robin' }
+                {
+                    'grpc.service_config': JSON.stringify({
+                        loadBalancingConfig: [{ round_robin: {} }]
+                    })
+                }
             );
 
             this.taskClient = new taskProto.TaskService(
-                this.servers.join(','), 
+                address,
                 credentials,
-                { 'grpc.lb_policy_name': 'round_robin' }
+                {
+                    'grpc.service_config': JSON.stringify({
+                        loadBalancingConfig: [{ round_robin: {} }]
+                    })
+                }
             );
 
             console.log('✅ Cliente gRPC inicializado com round-robin');
@@ -67,12 +76,12 @@ class GrpcClient {
     async login(credentials) {
         const loginPromise = this.promisify(this.authClient, 'Login');
         const response = await loginPromise(credentials);
-        
+
         if (response.success) {
             this.currentToken = response.token;
             console.log('🔑 Token obtido com sucesso');
         }
-        
+
         return response;
     }
 
@@ -180,7 +189,7 @@ class GrpcClient {
 // Demonstração de uso
 async function demonstrateGrpcClient() {
     const client = new GrpcClient();
-    
+
     try {
         await client.initialize();
 
@@ -241,7 +250,7 @@ async function demonstrateGrpcClient() {
         // 7. Demonstrar streaming (comentado para evitar loop infinito)
         // console.log('\n7. Iniciando stream de notificações...');
         // const notificationStream = client.streamNotifications();
-        
+
         // Manter stream aberto por alguns segundos
         // setTimeout(() => notificationStream.cancel(), 5000);
 
