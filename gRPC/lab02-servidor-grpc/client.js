@@ -9,8 +9,8 @@ const ProtoLoader = require('./utils/protoLoader');
  */
 
 class GrpcClient {
-    constructor(serverAddress = 'localhost:50051') {
-        this.serverAddress = serverAddress;
+    constructor(servers = ['localhost:50051','localhost:50052','localhost:50053']) {
+        this.servers = servers;
         this.protoLoader = new ProtoLoader();
         this.authClient = null;
         this.taskClient = null;
@@ -19,17 +19,25 @@ class GrpcClient {
 
     async initialize() {
         try {
-            // Carregar protobuf
             const authProto = this.protoLoader.loadProto('auth_service.proto', 'auth');
             const taskProto = this.protoLoader.loadProto('task_service.proto', 'tasks');
 
-            // Criar clientes
             const credentials = grpc.credentials.createInsecure();
-            
-            this.authClient = new authProto.AuthService(this.serverAddress, credentials);
-            this.taskClient = new taskProto.TaskService(this.serverAddress, credentials);
 
-            console.log('✅ Cliente gRPC inicializado');
+            // Criar clientes com round-robin
+            this.authClient = new authProto.AuthService(
+                this.servers.join(','), 
+                credentials,
+                { 'grpc.lb_policy_name': 'round_robin' }
+            );
+
+            this.taskClient = new taskProto.TaskService(
+                this.servers.join(','), 
+                credentials,
+                { 'grpc.lb_policy_name': 'round_robin' }
+            );
+
+            console.log('✅ Cliente gRPC inicializado com round-robin');
         } catch (error) {
             console.error('❌ Erro na inicialização do cliente:', error);
             throw error;

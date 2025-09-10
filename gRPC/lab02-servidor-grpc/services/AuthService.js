@@ -5,11 +5,9 @@ const database = require('../database/database');
 const jwt = require('jsonwebtoken');
 
 class AuthService {
+
     /**
      * Registro de usuário
-     * 
-     * Implementa validação de dados e criação de usuário
-     * usando Protocol Buffers para comunicação tipada
      */
     async register(call, callback) {
         try {
@@ -17,11 +15,9 @@ class AuthService {
 
             // Validações básicas
             if (!email || !username || !password || !first_name || !last_name) {
-                return callback(null, {
-                    success: false,
-                    message: 'Todos os campos são obrigatórios',
-                    errors: ['Campos obrigatórios não preenchidos']
-                });
+                const error = new Error('Todos os campos são obrigatórios');
+                error.code = grpc.status.INVALID_ARGUMENT;
+                return callback(error);
             }
 
             // Verificar se usuário já existe
@@ -31,11 +27,9 @@ class AuthService {
             );
 
             if (existingUser) {
-                return callback(null, {
-                    success: false,
-                    message: 'Email ou username já existe',
-                    errors: ['Usuário já cadastrado']
-                });
+                const error = new Error('Email ou username já existe');
+                error.code = grpc.status.ALREADY_EXISTS;
+                return callback(error);
             }
 
             // Criar usuário
@@ -65,11 +59,9 @@ class AuthService {
             });
         } catch (error) {
             console.error('Erro no registro:', error);
-            callback(null, {
-                success: false,
-                message: 'Erro interno do servidor',
-                errors: ['Falha no processamento']
-            });
+            const grpcError = new Error('Erro interno do servidor');
+            grpcError.code = grpc.status.INTERNAL;
+            callback(grpcError);
         }
     }
 
@@ -81,11 +73,9 @@ class AuthService {
             const { identifier, password } = call.request;
 
             if (!identifier || !password) {
-                return callback(null, {
-                    success: false,
-                    message: 'Credenciais obrigatórias',
-                    errors: ['Email/username e senha são obrigatórios']
-                });
+                const error = new Error('Email/username e senha são obrigatórios');
+                error.code = grpc.status.INVALID_ARGUMENT;
+                return callback(error);
             }
 
             const userData = await database.get(
@@ -94,22 +84,18 @@ class AuthService {
             );
 
             if (!userData) {
-                return callback(null, {
-                    success: false,
-                    message: 'Credenciais inválidas',
-                    errors: ['Usuário não encontrado']
-                });
+                const error = new Error('Credenciais inválidas');
+                error.code = grpc.status.NOT_FOUND;
+                return callback(error);
             }
 
             const user = new User(userData);
             const isValidPassword = await user.comparePassword(password);
 
             if (!isValidPassword) {
-                return callback(null, {
-                    success: false,
-                    message: 'Credenciais inválidas',
-                    errors: ['Senha incorreta']
-                });
+                const error = new Error('Senha incorreta');
+                error.code = grpc.status.PERMISSION_DENIED;
+                return callback(error);
             }
 
             const token = user.generateToken();
@@ -122,11 +108,9 @@ class AuthService {
             });
         } catch (error) {
             console.error('Erro no login:', error);
-            callback(null, {
-                success: false,
-                message: 'Erro interno do servidor',
-                errors: ['Falha no processamento']
-            });
+            const grpcError = new Error('Erro interno do servidor');
+            grpcError.code = grpc.status.INTERNAL;
+            callback(grpcError);
         }
     }
 
@@ -139,22 +123,20 @@ class AuthService {
             const jwtSecret = process.env.JWT_SECRET || 'seu-secret-aqui';
 
             if (!token) {
-                return callback(null, {
-                    valid: false,
-                    message: 'Token não fornecido'
-                });
+                const error = new Error('Token não fornecido');
+                error.code = grpc.status.UNAUTHENTICATED;
+                return callback(error);
             }
 
             const decoded = jwt.verify(token, jwtSecret);
-            
+
             // Buscar dados atualizados do usuário
             const userData = await database.get('SELECT * FROM users WHERE id = ?', [decoded.id]);
-            
+
             if (!userData) {
-                return callback(null, {
-                    valid: false,
-                    message: 'Usuário não encontrado'
-                });
+                const error = new Error('Usuário não encontrado');
+                error.code = grpc.status.NOT_FOUND;
+                return callback(error);
             }
 
             const user = new User(userData);
@@ -165,10 +147,10 @@ class AuthService {
                 message: 'Token válido'
             });
         } catch (error) {
-            callback(null, {
-                valid: false,
-                message: 'Token inválido'
-            });
+            console.error('Erro na validação do token:', error);
+            const grpcError = new Error('Token inválido');
+            grpcError.code = grpc.status.UNAUTHENTICATED;
+            callback(grpcError);
         }
     }
 }

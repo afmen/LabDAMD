@@ -3,6 +3,7 @@ const ProtoLoader = require('./utils/protoLoader');
 const AuthService = require('./services/AuthService');
 const TaskService = require('./services/TaskService');
 const database = require('./database/database');
+const Auth = require('./middleware/auth');
 
 /**
  * Servidor gRPC
