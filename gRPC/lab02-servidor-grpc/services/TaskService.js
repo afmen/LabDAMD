@@ -8,6 +8,9 @@ const ProtoLoader = require('../utils/protoLoader');
 class TaskService {
     constructor() {
         this.streamingSessions = new Map(); // Para gerenciar streams ativos
+        this.taskStreams = new Map(); // Para streamTasks
+        this.chatClients = new Map(); // Para gerenciar conexões bidirecionais
+
     }
 
     /**
@@ -106,7 +109,7 @@ class TaskService {
             const limitNum = Math.min(limit || 10, 100);
 
             const result = await database.getAllWithPagination(sql, params, pageNum, limitNum);
-            const tasks = result.rows.map(row => new Task({...row, completed: row.completed === 1}).toProtobuf());
+            const tasks = result.rows.map(row => new Task({ ...row, completed: row.completed === 1 }).toProtobuf());
 
             callback(null, {
                 success: true,
@@ -143,7 +146,7 @@ class TaskService {
                 return callback(err);
             }
 
-            const task = new Task({...row, completed: row.completed === 1});
+            const task = new Task({ ...row, completed: row.completed === 1 });
 
             callback(null, {
                 success: true,
@@ -158,6 +161,8 @@ class TaskService {
             callback(grpcError);
         }
     }
+
+
 
     /**
      * Atualizar tarefa
@@ -197,7 +202,7 @@ class TaskService {
             }
 
             const updatedRow = await database.get('SELECT * FROM tasks WHERE id = ? AND userId = ?', [task_id, user.id]);
-            const task = new Task({...updatedRow, completed: updatedRow.completed === 1});
+            const task = new Task({ ...updatedRow, completed: updatedRow.completed === 1 });
 
             this.notifyStreams('TASK_UPDATED', task);
 
@@ -239,7 +244,7 @@ class TaskService {
                 return callback(err);
             }
 
-            const task = new Task({...existingTask, completed: existingTask.completed === 1});
+            const task = new Task({ ...existingTask, completed: existingTask.completed === 1 });
             this.notifyStreams('TASK_DELETED', task);
 
             callback(null, {
@@ -255,8 +260,175 @@ class TaskService {
         }
     }
 
-    // Os métodos de stream (streamTasks e streamNotifications) podem manter call.destroy em caso de erro,
-    // pois streaming lida diretamente com conexões abertas.
+    /**
+ * Obter estatísticas de tarefas
+ */
+
+
+    async getTaskStats(call, callback) {
+        try {
+            const { token } = call.request;
+            const user = await this.validateToken(token);
+
+            const totalResult = await database.get('SELECT COUNT(*) as count FROM tasks WHERE userId = ?', [user.id]);
+            const completedResult = await database.get('SELECT COUNT(*) as count FROM tasks WHERE userId = ? AND completed = 1', [user.id]);
+            const pendingResult = await database.get('SELECT COUNT(*) as count FROM tasks WHERE userId = ? AND completed = 0', [user.id]);
+
+            const total = Number(totalResult?.count ?? 0);
+            const completed = Number(completedResult?.count ?? 0);
+            const pending = Number(pendingResult?.count ?? 0);
+            const completion_rate = total > 0 ? completed / total : 0;
+
+
+            callback(null, {
+                success: true,
+                stats: {
+                    total: total || 0,
+                    completed: completed || 0,
+                    pending: pending || 0,
+                    completion_rate: Number(completion_rate.toFixed(4)) // garante que seja double
+                }
+            });
+        } catch (error) {
+            console.error('Erro ao obter estatísticas de tarefas:', error);
+            const grpcError = new Error(error.message || 'Erro interno do servidor');
+            grpcError.code = error.code || grpc.status.INTERNAL;
+            callback(grpcError);
+        }
+    }
+
+    /**
+ * Notifica todas as streams ativas sobre alterações de tarefas
+ * @param {string} type Tipo de evento ('TASK_CREATED', 'TASK_UPDATED', 'TASK_DELETED')
+ * @param {Task} task Instância da tarefa afetada
+ */
+    notifyStreams(type, task) {
+        // Notificações padrão
+        for (const [callId, call] of this.streamingSessions.entries()) {
+            try {
+                call.write({
+                    type,
+                    task: task.toProtobuf(),
+                    timestamp: Math.floor(Date.now() / 1000)
+                });
+            } catch (err) {
+                console.error('Erro ao notificar streamNotifications:', err);
+            }
+        }
+
+        // Envia também para StreamTasks
+        for (const [callId, call] of this.taskStreams.entries()) {
+            try {
+                call.write(task.toProtobuf());
+            } catch (err) {
+                console.error('Erro ao notificar streamTasks:', err);
+            }
+        }
+    }
+
+    /**
+     * Servidor stream (server-side streaming) para listar tarefas e
+     * receber atualizações em tempo real.
+     */
+    streamTasks(call) {
+        const streamId = uuidv4();
+        this.taskStreams.set(streamId, call);
+        console.log(`Nova sessão de stream de tarefas iniciada. Total: ${this.taskStreams.size}`);
+
+        // Envia todas as tarefas existentes do usuário
+        this.validateToken(call.request.token)
+            .then(async (user) => {
+                const rows = await database.getAll('SELECT * FROM tasks WHERE userId = ?', [user.id]);
+                rows.forEach(row => {
+                    const task = new Task({ ...row, completed: row.completed === 1 });
+                    call.write(task.toProtobuf());
+                });
+            })
+            .catch(err => {
+                console.error('Token inválido no streamTasks:', err);
+                call.end();
+            });
+
+        // Recebe finalização da conexão
+        call.on('end', () => {
+            this.taskStreams.delete(streamId);
+            console.log(`Sessão de stream de tarefas finalizada. Total: ${this.taskStreams.size}`);
+            call.end();
+        });
+
+        call.on('error', (err) => {
+            this.taskStreams.delete(streamId);
+            console.error('Erro na sessão de stream de tarefas:', err);
+        });
+    }
+
+    /**
+     * Servidor stream (server-side streaming) para notificar atualizações de tarefas.
+     */
+    streamNotifications(call) {
+        const streamId = uuidv4();       // gera ID único
+        this.streamingSessions.set(streamId, call);
+        console.log(`Nova sessão de stream para notificações iniciada. Total: ${this.streamingSessions.size}`);
+
+        call.on('end', () => {
+            this.streamingSessions.delete(streamId);
+            console.log(`Sessão de stream para notificações finalizada. Total: ${this.streamingSessions.size}`);
+        });
+
+        call.on('error', (err) => {
+            this.streamingSessions.delete(streamId);
+            console.error('Erro na sessão de stream:', err);
+        });
+    }
+
+    /**
+     * Chat bidirecional: streaming cliente-servidor
+     * @param {grpc.ServerDuplexStream} call
+     */
+    chat(call) {
+        const clientId = uuidv4();
+        this.chatClients.set(clientId, call);
+        console.log(`Novo cliente de chat conectado. Total: ${this.chatClients.size}`);
+
+        // Quando o cliente envia uma mensagem
+        call.on('data', (message) => {
+            const timestamp = Math.floor(Date.now() / 1000);
+            const msg = {
+                user_id: message.user_id,
+                message: message.message,
+                timestamp
+            };
+
+            // Distribuir mensagem para todos os clientes, exceto o próprio remetente
+            for (const [id, clientCall] of this.chatClients.entries()) {
+                if (id === clientId) continue; // ignora a própria conexão
+                try {
+                    clientCall.write(msg);
+                } catch (err) {
+                    console.error('Erro ao enviar mensagem para cliente:', err);
+                }
+            }
+        });
+
+        // Quando o cliente encerra o stream
+        call.on('end', () => {
+            this.chatClients.delete(clientId);
+            console.log(`Cliente de chat desconectado. Total: ${this.chatClients.size}`);
+            call.end();
+        });
+
+        // Quando ocorre algum erro no stream
+        call.on('error', (err) => {
+            this.chatClients.delete(clientId);
+            console.error('Erro no stream de chat:', err);
+        });
+    }
+
+    // Aqui entram os outros métodos já existentes: createTask, getTasks, updateTask, deleteTask, etc.
+
 }
+
+
+
 
 module.exports = TaskService;

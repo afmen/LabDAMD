@@ -13,6 +13,9 @@ service TaskService {
   // Streaming endpoints
   rpc StreamTasks(StreamTasksRequest) returns (stream Task);
   rpc StreamNotifications(StreamNotificationsRequest) returns (stream TaskNotification);
+
+  // Chat em tempo real (bidirecional)
+  rpc Chat(stream ChatMessage) returns (stream ChatMessage);
 }
 
 enum Priority {
@@ -138,4 +141,10 @@ message TaskNotification {
   Task task = 2;
   string message = 3;
   int64 timestamp = 4;
+}
+
+message ChatMessage {
+  string user_id = 1;
+  string message = 2;
+  int64 timestamp = 3;
 }

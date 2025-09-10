@@ -1,6 +1,7 @@
 const grpc = require('@grpc/grpc-js');
 const ProtoLoader = require('./utils/protoLoader');
-const address = `dns:///${this.servers.join(',')}`;
+
+
 
 /**
  * Cliente gRPC de Exemplo
@@ -14,44 +15,47 @@ class GrpcClient {
         this.servers = servers;
         this.protoLoader = new ProtoLoader();
         this.authClient = null;
-        this.taskClient = null;
+        this.authClients = [];   // array de AuthService
+        this.taskClients = [];   // array de TaskService
+        this.currentAuthIndex = 0;  // índice round-robin específico para Auth
+        this.currentTaskIndex = 0;
         this.currentToken = null;
     }
 
     async initialize() {
         try {
-            const authProto = this.protoLoader.loadProto('auth_service.proto', 'auth');
-            const taskProto = this.protoLoader.loadProto('task_service.proto', 'tasks');
+            const { servicePackage: authProto } = this.protoLoader.loadProto('auth_service.proto', 'auth');
+            const { servicePackage: taskProto } = this.protoLoader.loadProto('task_service.proto', 'tasks');
+
 
             const credentials = grpc.credentials.createInsecure();
 
-            // Criar clientes com round-robin
-            this.authClient = new authProto.AuthService(
-                address,
-                credentials,
-                {
-                    'grpc.service_config': JSON.stringify({
-                        loadBalancingConfig: [{ round_robin: {} }]
-                    })
-                }
-            );
+            // Criar clients individuais para cada servidor
+            this.authClients = this.servers.map(addr => new authProto.AuthService(addr, credentials));
+            this.taskClients = this.servers.map(addr => new taskProto.TaskService(addr, credentials));
 
-            this.taskClient = new taskProto.TaskService(
-                address,
-                credentials,
-                {
-                    'grpc.service_config': JSON.stringify({
-                        loadBalancingConfig: [{ round_robin: {} }]
-                    })
-                }
-            );
+            // Inicializa índice round-robin
+            this.currentIndex = 0;
 
-            console.log('✅ Cliente gRPC inicializado com round-robin');
+            console.log('✅ Cliente gRPC inicializado com round-robin manual');
         } catch (error) {
             console.error('❌ Erro na inicialização do cliente:', error);
             throw error;
         }
     }
+
+    getNextAuthClient() {
+        const client = this.authClients[this.currentAuthIndex];
+        this.currentAuthIndex = (this.currentAuthIndex + 1) % this.authClients.length;
+        return client;
+    }
+
+    getNextTaskClient() {
+        const client = this.taskClients[this.currentTaskIndex];
+        this.currentTaskIndex = (this.currentTaskIndex + 1) % this.taskClients.length;
+        return client;
+    }
+
 
     // Promisificar chamadas gRPC
     promisify(client, method) {
@@ -69,12 +73,12 @@ class GrpcClient {
     }
 
     async register(userData) {
-        const registerPromise = this.promisify(this.authClient, 'Register');
+        const registerPromise = this.promisify(this.getNextAuthClient(), 'Register');
         return await registerPromise(userData);
     }
 
     async login(credentials) {
-        const loginPromise = this.promisify(this.authClient, 'Login');
+        const loginPromise = this.promisify(this.getNextAuthClient(), 'Login');
         const response = await loginPromise(credentials);
 
         if (response.success) {
@@ -86,7 +90,7 @@ class GrpcClient {
     }
 
     async createTask(taskData) {
-        const createPromise = this.promisify(this.taskClient, 'CreateTask');
+        const createPromise = this.promisify(this.getNextTaskClient(), 'CreateTask');
         return await createPromise({
             token: this.currentToken,
             ...taskData
@@ -94,15 +98,16 @@ class GrpcClient {
     }
 
     async getTasks(filters = {}) {
-        const getTasksPromise = this.promisify(this.taskClient, 'GetTasks');
+        const getTasksPromise = this.promisify(this.getNextTaskClient(), 'GetTasks');
         return await getTasksPromise({
             token: this.currentToken,
             ...filters
         });
     }
 
+
     async getTask(taskId) {
-        const getTaskPromise = this.promisify(this.taskClient, 'GetTask');
+        const getTaskPromise = this.promisify(this.getNextTaskClient(), 'GetTask');
         return await getTaskPromise({
             token: this.currentToken,
             task_id: taskId
@@ -110,7 +115,7 @@ class GrpcClient {
     }
 
     async updateTask(taskId, updates) {
-        const updatePromise = this.promisify(this.taskClient, 'UpdateTask');
+        const updatePromise = this.promisify(this.getNextTaskClient(), 'UpdateTask');
         return await updatePromise({
             token: this.currentToken,
             task_id: taskId,
@@ -119,7 +124,7 @@ class GrpcClient {
     }
 
     async deleteTask(taskId) {
-        const deletePromise = this.promisify(this.taskClient, 'DeleteTask');
+        const deletePromise = this.promisify(this.getNextTaskClient(), 'DeleteTask');
         return await deletePromise({
             token: this.currentToken,
             task_id: taskId
@@ -127,7 +132,7 @@ class GrpcClient {
     }
 
     async getStats() {
-        const statsPromise = this.promisify(this.taskClient, 'GetTaskStats');
+        const statsPromise = this.promisify(this.getNextTaskClient(), 'GetTaskStats');
         return await statsPromise({
             token: this.currentToken
         });
@@ -135,7 +140,7 @@ class GrpcClient {
 
     // Demonstração de streaming
     streamTasks(filters = {}) {
-        const stream = this.taskClient.StreamTasks({
+        const stream = this.getNextTaskClient().StreamTasks({
             token: this.currentToken,
             ...filters
         });
@@ -159,8 +164,11 @@ class GrpcClient {
         return stream;
     }
 
+
+
+
     streamNotifications() {
-        const stream = this.taskClient.StreamNotifications({
+        const stream = this.getNextTaskClient().StreamNotifications({
             token: this.currentToken
         });
 
@@ -184,6 +192,28 @@ class GrpcClient {
 
         return stream;
     }
+
+
+
+
+    chat() {
+        const stream = this.getNextTaskClient().Chat();
+
+        stream.on('data', (message) => {
+            console.log(`[📩] ${message.user_id}: ${message.message} (${new Date(message.timestamp * 1000).toLocaleTimeString()})`);
+        });
+
+        stream.on('end', () => {
+            console.log('Chat finalizado pelo servidor');
+        });
+
+        stream.on('error', (err) => {
+            console.error('Erro no chat:', err);
+        });
+
+        // Retorna o stream para que possamos enviar mensagens
+        return stream;
+    }
 }
 
 // Demonstração de uso
@@ -195,14 +225,22 @@ async function demonstrateGrpcClient() {
 
         // 1. Registrar usuário
         console.log('\n1. Registrando usuário...');
-        const registerResponse = await client.register({
-            email: 'usuario@teste.com',
-            username: 'usuarioteste',
-            password: 'senha123',
-            first_name: 'João',
-            last_name: 'Silva'
-        });
-        console.log('Registro:', registerResponse.message);
+        try {
+            const registerResponse = await client.register({
+                email: 'usuario@teste.com',
+                username: 'usuarioteste',
+                password: 'senha123',
+                first_name: 'João',
+                last_name: 'Silva'
+            });
+            console.log('Registro:', registerResponse.message);
+        } catch (error) {
+            if (error.code === 6) { // grpc.status.ALREADY_EXISTS
+                console.log('Usuário já existe, pulando registro...');
+            } else {
+                throw error; // outros erros são tratados normalmente
+            }
+        }
 
         // 2. Fazer login
         console.log('\n2. Fazendo login...');
@@ -235,6 +273,8 @@ async function demonstrateGrpcClient() {
         const tasksResponse = await client.getTasks({ page: 1, limit: 10 });
         console.log(`Encontradas ${tasksResponse.tasks.length} tarefas`);
 
+
+
         // 5. Buscar tarefa específica
         if (tasksResponse.tasks.length > 0) {
             console.log('\n5. Buscando tarefa específica...');
@@ -245,19 +285,71 @@ async function demonstrateGrpcClient() {
         // 6. Estatísticas
         console.log('\n6. Estatísticas...');
         const statsResponse = await client.getStats();
-        console.log('Stats:', statsResponse.stats);
+        if (statsResponse.success && statsResponse.stats) {
+            const s = statsResponse.stats;
+            console.log('Stats:', {
+                total: s.total,
+                completed: s.completed,
+                pending: s.pending,
+                completion_rate: s.completion_rate
+            });
+        } else {
+            console.log('Não foi possível obter estatísticas:', statsResponse.message || 'Resposta inválida');
+        }
 
-        // 7. Demonstrar streaming (comentado para evitar loop infinito)
-        // console.log('\n7. Iniciando stream de notificações...');
-        // const notificationStream = client.streamNotifications();
+        // 7. Demonstrar chat bidirecional
+        console.log('\n5. Iniciando chat bidirecional...');
+        const userId = 'user_' + Math.floor(Math.random() * 10000);
+        console.log('🔹 Iniciando chat como:', userId);
 
-        // Manter stream aberto por alguns segundos
-        // setTimeout(() => notificationStream.cancel(), 5000);
+        const chatStream = client.chat();
+
+        // Envia mensagens a cada 5 segundos
+        const interval = setInterval(() => {
+            const timestamp = Math.floor(Date.now() / 1000);
+            chatStream.write({
+                user_id: userId,
+                message: 'Olá, pessoal! Esta é a mensagem de ' + userId,
+                timestamp
+            });
+        }, 5000);
+
+        // Encerra chat após 30 segundos
+        setTimeout(() => {
+            chatStream.end();
+            clearInterval(interval);
+            console.log('Chat finalizado pelo cliente', userId);
+        }, 30000);
+
+        // Recebe mensagens de outros usuários
+        chatStream.on('data', (msg) => {
+            console.log(`[📩] ${msg.user_id}: ${msg.message} (${new Date(msg.timestamp * 1000).toLocaleTimeString()})`);
+        });
+
+        setTimeout(() => {
+            chatStream.end();
+            clearInterval(interval);
+        }, 30000);
+
+        // Encerrar chat após 30s
+        setTimeout(() => {
+            chatStream.end();
+        }, 30000);
 
     } catch (error) {
         console.error('❌ Erro na demonstração:', error);
     }
 }
+
+// 7. Demonstrar streaming (comentado para evitar loop infinito)
+// console.log('\n7. Iniciando stream de notificações...');
+// const notificationStream = client.streamNotifications();
+
+// Manter stream aberto por alguns segundos
+// setTimeout(() => notificationStream.cancel(), 5000);
+
+
+
 
 // Executar demonstração se arquivo for executado diretamente
 if (require.main === module) {

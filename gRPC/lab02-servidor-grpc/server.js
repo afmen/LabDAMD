@@ -18,11 +18,13 @@ const database = require('./database/database');
  */
 
 class GrpcServer {
-    constructor() {
+    constructor(port) {
+        this.port = port || 50051;
         this.server = new grpc.Server();
         this.protoLoader = new ProtoLoader();
         this.authService = new AuthService();
         this.taskService = new TaskService();
+        
     }
 
     async initialize() {
@@ -53,8 +55,11 @@ class GrpcServer {
                 DeleteTask: this.taskService.deleteTask.bind(this.taskService),
                 GetTaskStats: this.taskService.getTaskStats.bind(this.taskService),
                 StreamTasks: this.taskService.streamTasks.bind(this.taskService),
-                StreamNotifications: this.taskService.streamNotifications.bind(this.taskService)
+                StreamNotifications: this.taskService.streamNotifications.bind(this.taskService),
+                Chat: this.taskService.chat.bind(this.taskService)
+
             });
+
 
             console.log('✅ Serviços gRPC registrados com sucesso');
         } catch (error) {
@@ -63,13 +68,12 @@ class GrpcServer {
         }
     }
 
-      async start(port = 50051) {
+    async start() {
         try {
             await this.initialize();
 
             const serverCredentials = grpc.ServerCredentials.createInsecure();
-
-            this.server.bindAsync(`0.0.0.0:${port}`, serverCredentials, (error, boundPort) => {
+            this.server.bindAsync(`0.0.0.0:${this.port}`, serverCredentials, (error, boundPort) => {
                 if (error) {
                     console.error('❌ Falha ao iniciar servidor:', error);
                     return;
@@ -108,9 +112,9 @@ class GrpcServer {
 
 // Inicialização
 if (require.main === module) {
-    const server = new GrpcServer();
     const port = parseInt(process.env.GRPC_PORT) || 50051;
-    server.start(port);
+    const server = new GrpcServer(port);
+    server.start();
 }
 
 module.exports = GrpcServer;

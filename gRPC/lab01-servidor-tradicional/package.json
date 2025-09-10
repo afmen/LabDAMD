@@ -1,0 +1,44 @@
+{
+  "name": "lab01-servidor-tradicional",
+  "version": "1.0.0",
+  "description": "Sistema de tarefas com arquitetura cliente-servidor tradicional",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "lint": "eslint . --ext .js",
+    "lint:fix": "eslint . --ext .js --fix",
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
+  "keywords": [
+    "sistemas-distribuidos",
+    "cliente-servidor",
+    "rest-api",
+    "nodejs",
+    "task-api"
+  ],
+  "author": "Aluno PUC Minas",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.19.2",
+    "express-async-errors": "^3.1.1",
+    "express-rate-limit": "^6.10.0",
+    "helmet": "^7.1.0",
+    "joi": "^18.0.1",
+    "jsonwebtoken": "^9.0.2",
+    "sqlite3": "^5.1.7",
+    "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "eslint": "^8.48.0",
+    "jest": "^29.6.0",
+    "nodemon": "^3.1.7"
+  }
+}
