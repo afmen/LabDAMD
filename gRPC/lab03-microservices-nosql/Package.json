@@ -16,7 +16,13 @@
     "health": "curl -s http://localhost:3000/health",
     "install:all": "npm install && cd services/user-service && npm install && cd ../product-service && npm install && cd ../../api-gateway && npm install",
     "clean": "rm -rf node_modules services/*/node_modules api-gateway/node_modules",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "reset": "node reset-services.js",
+    "reset:clear": "node reset-services.js clear",
+    "reset:status": "node reset-services.js status",
+    "test:system": "node reset-services.js",
+    "debug:registry": "curl -s http://127.0.0.1:3000/registry | json_pp",
+    "debug:health": "curl -s http://127.0.0.1:3000/health | json_pp"
   },
   "keywords": [
     "microservices",
