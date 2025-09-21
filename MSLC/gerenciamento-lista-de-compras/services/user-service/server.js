@@ -17,7 +17,7 @@ class UserService {
         this.port = process.env.PORT || 3001;
         this.serviceName = 'user-service';
         this.serviceUrl = `http://localhost:${this.port}`;
-        
+
         this.setupDatabase();
         this.setupMiddleware();
         this.setupRoutes();
@@ -36,10 +36,10 @@ class UserService {
         setTimeout(async () => {
             try {
                 const existingUsers = await this.usersDb.find();
-                
+
                 if (existingUsers.length === 0) {
                     const adminPassword = await bcrypt.hash('admin123', 12);
-                    
+
                     await this.usersDb.create({
                         id: uuidv4(),
                         email: 'admin@microservices.com',
@@ -47,8 +47,12 @@ class UserService {
                         password: adminPassword,
                         firstName: 'Administrador',
                         lastName: 'Sistema',
-                        role: 'admin',
-                        status: 'active'
+                        preferences: {
+                            defaultStore: null,
+                            currency: 'BRL'
+                        },
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString()
                     });
 
                     console.log('Usuário administrador criado (admin@microservices.com / admin123)');
@@ -109,12 +113,12 @@ class UserService {
                 database: 'JSON-NoSQL',
                 endpoints: [
                     'POST /auth/register',
-                    'POST /auth/login', 
-                //    'POST /auth/validate',
-                //    'GET /users',
+                    'POST /auth/login',
+                    //    'POST /auth/validate',
+                    //    'GET /users',
                     'GET /users/:id',
                     'PUT /users/:id',
-                //    'GET /search'
+                    //    'GET /search'
                 ]
             });
         });
@@ -122,13 +126,13 @@ class UserService {
         // Auth routes
         this.app.post('/auth/register', this.register.bind(this));
         this.app.post('/auth/login', this.login.bind(this));
-    //    this.app.post('/auth/validate', this.validateToken.bind(this));
+        //    this.app.post('/auth/validate', this.validateToken.bind(this));
 
         // User routes (protected)
         //this.app.get('/users', this.authMiddleware.bind(this), this.getUsers.bind(this));
         this.app.get('/users/:id', this.authMiddleware.bind(this), this.getUser.bind(this));
         this.app.put('/users/:id', this.authMiddleware.bind(this), this.updateUser.bind(this));
-        
+
         // Search route
         //this.app.get('/search', this.authMiddleware.bind(this), this.searchUsers.bind(this));
     }
@@ -155,7 +159,7 @@ class UserService {
     // Auth middleware
     authMiddleware(req, res, next) {
         const authHeader = req.header('Authorization');
-        
+
         if (!authHeader?.startsWith('Bearer ')) {
             return res.status(401).json({
                 success: false,
@@ -164,7 +168,7 @@ class UserService {
         }
 
         const token = authHeader.replace('Bearer ', '');
-        
+
         try {
             const decoded = jwt.verify(token, process.env.JWT_SECRET || 'user-secret');
             req.user = decoded;
@@ -219,31 +223,22 @@ class UserService {
                 password: hashedPassword,
                 firstName,
                 lastName,
-                role: 'user',
-                status: 'active',
-                profile: {
-                    bio: null,
-                    avatar: null,
-                    preferences: {
-                        theme: 'light',
-                        language: 'pt-BR'
-                    }
+                preferences: {
+                    defaultStore: null,
+                    currency: 'BRL'
                 },
-                metadata: {
-                    registrationDate: new Date().toISOString(),
-                    lastLogin: null,
-                    loginCount: 0
-                }
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
             });
 
             const { password: _, ...userWithoutPassword } = newUser;
 
             const token = jwt.sign(
-                { 
-                    id: newUser.id, 
-                    email: newUser.email, 
+                {
+                    id: newUser.id,
+                    email: newUser.email,
                     username: newUser.username,
-                    role: newUser.role 
+                    role: newUser.role
                 },
                 process.env.JWT_SECRET || 'user-secret',
                 { expiresIn: '24h' }
@@ -299,18 +294,17 @@ class UserService {
 
             // Atualizar dados de login (demonstrando flexibilidade NoSQL)
             await this.usersDb.update(user.id, {
-                'metadata.lastLogin': new Date().toISOString(),
-                'metadata.loginCount': (user.metadata?.loginCount || 0) + 1
+                updatedAt: new Date().toISOString()
             });
 
             const { password: _, ...userWithoutPassword } = user;
-            
+
             const token = jwt.sign(
-                { 
-                    id: user.id, 
-                    email: user.email, 
+                {
+                    id: user.id,
+                    email: user.email,
                     username: user.username,
-                    role: user.role 
+                    role: user.role
                 },
                 process.env.JWT_SECRET || 'user-secret',
                 { expiresIn: '24h' }
@@ -474,11 +468,11 @@ class UserService {
             if (firstName) updates.firstName = firstName;
             if (lastName) updates.lastName = lastName;
             if (email) updates.email = email.toLowerCase();
-            
+
             // Atualizar campos aninhados (demonstrando NoSQL)
-            if (bio !== undefined) updates['profile.bio'] = bio;
-            if (theme) updates['profile.preferences.theme'] = theme;
-            if (language) updates['profile.preferences.language'] = language;
+            if (req.body.defaultStore) updates['preferences.defaultStore'] = req.body.defaultStore;
+            if (req.body.currency) updates['preferences.currency'] = req.body.currency;
+            updates.updatedAt = new Date().toISOString();
 
             const updatedUser = await this.usersDb.update(id, updates);
             const { password, ...userWithoutPassword } = updatedUser;
@@ -563,7 +557,7 @@ class UserService {
             console.log(`Health: ${this.serviceUrl}/health`);
             console.log(`Database: JSON-NoSQL`);
             console.log('=====================================');
-            
+
             // Register with service registry
             this.registerWithRegistry();
             this.startHealthReporting();
