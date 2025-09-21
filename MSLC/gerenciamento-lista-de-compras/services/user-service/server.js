@@ -109,7 +109,7 @@ class UserService {
                 database: 'JSON-NoSQL',
                 endpoints: [
                     'POST /auth/register',
-                //    'POST /auth/login', 
+                    'POST /auth/login', 
                 //    'POST /auth/validate',
                 //    'GET /users',
                     'GET /users/:id',
@@ -121,16 +121,16 @@ class UserService {
 
         // Auth routes
         this.app.post('/auth/register', this.register.bind(this));
-    //    this.app.post('/auth/login', this.login.bind(this));
+        this.app.post('/auth/login', this.login.bind(this));
     //    this.app.post('/auth/validate', this.validateToken.bind(this));
 
         // User routes (protected)
-        this.app.get('/users', this.authMiddleware.bind(this), this.getUsers.bind(this));
+        //this.app.get('/users', this.authMiddleware.bind(this), this.getUsers.bind(this));
         this.app.get('/users/:id', this.authMiddleware.bind(this), this.getUser.bind(this));
         this.app.put('/users/:id', this.authMiddleware.bind(this), this.updateUser.bind(this));
         
         // Search route
-        this.app.get('/search', this.authMiddleware.bind(this), this.searchUsers.bind(this));
+        //this.app.get('/search', this.authMiddleware.bind(this), this.searchUsers.bind(this));
     }
 
     setupErrorHandling() {
@@ -331,7 +331,7 @@ class UserService {
     }
 
     // Validate token
-    async validateToken(req, res) {
+    /*async validateToken(req, res) {
         try {
             const { token } = req.body;
 
@@ -365,10 +365,10 @@ class UserService {
                 message: 'Token inválido'
             });
         }
-    }
+    }*/
 
     // Get users (com paginação)
-    async getUsers(req, res) {
+    /*async getUsers(req, res) {
         try {
             const { page = 1, limit = 10, role, status } = req.query;
             const skip = (page - 1) * parseInt(limit);
@@ -409,7 +409,7 @@ class UserService {
                 message: 'Erro interno do servidor'
             });
         }
-    }
+    }*/
 
     // Get user by ID
     async getUser(req, res) {
@@ -498,7 +498,7 @@ class UserService {
     }
 
     // Search users (demonstrando busca NoSQL)
-    async searchUsers(req, res) {
+    /*async searchUsers(req, res) {
         try {
             const { q, limit = 10 } = req.query;
 
@@ -536,7 +536,7 @@ class UserService {
                 message: 'Erro interno do servidor'
             });
         }
-    }
+    }*/
 
     // Register with service registry
     registerWithRegistry() {
