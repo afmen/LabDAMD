@@ -10,7 +10,7 @@
       "/search"
     ],
     "registeredAt": 1758508854174,
-    "lastHealthCheck": 1758509509973,
+    "lastHealthCheck": 1758509694473,
     "healthy": true,
     "pid": 4132
   },
@@ -23,7 +23,7 @@
       "/lists"
     ],
     "registeredAt": 1758508865402,
-    "lastHealthCheck": 1758509509984,
+    "lastHealthCheck": 1758509705635,
     "healthy": true,
     "pid": 16696
   },
@@ -39,7 +39,7 @@
       "/search"
     ],
     "registeredAt": 1758508879500,
-    "lastHealthCheck": 1758509509995,
+    "lastHealthCheck": 1758509690049,
     "healthy": true,
     "pid": 3140
   }
