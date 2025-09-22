@@ -1,0 +1,54 @@
+[
+  {
+    "id": "85b583f1-ca8e-4b97-adf1-746b06b887ad",
+    "name": "Arroz Branco",
+    "category": "Alimentos",
+    "brand": "Tio João",
+    "unit": "kg",
+    "averagePrice": 25.9,
+    "barcode": "7891000100101",
+    "description": "Arroz tipo 1, pacote 5kg",
+    "active": true,
+    "createdAt": "2025-09-22T02:19:16.695Z",
+    "updatedAt": "2025-09-22T02:19:16.730Z"
+  },
+  {
+    "id": "c04facdf-c0e7-4002-8979-0be9687a9f8a",
+    "name": "Feijão Carioca",
+    "category": "Alimentos",
+    "brand": "Kicaldo",
+    "unit": "kg",
+    "averagePrice": 9.8,
+    "barcode": "7896000100102",
+    "description": "Feijão carioca tipo 1, pacote 1kg",
+    "active": true,
+    "createdAt": "2025-09-22T02:19:16.706Z",
+    "updatedAt": "2025-09-22T02:19:16.791Z"
+  },
+  {
+    "id": "4bd172b3-a979-4b9a-a05c-acec996827cd",
+    "name": "Macarrão Espaguete",
+    "category": "Alimentos",
+    "brand": "Renata",
+    "unit": "kg",
+    "averagePrice": 6.5,
+    "barcode": "7897000100103",
+    "description": "Macarrão tipo espaguete, pacote 500g",
+    "active": true,
+    "createdAt": "2025-09-22T02:19:16.706Z",
+    "updatedAt": "2025-09-22T02:19:16.812Z"
+  },
+  {
+    "id": "46ca72a6-87c1-478c-8360-844fad8b21fc",
+    "name": "Açúcar Refinado",
+    "category": "Alimentos",
+    "brand": "União",
+    "unit": "kg",
+    "averagePrice": 4.2,
+    "barcode": "7898000100104",
+    "description": "Açúcar refinado, pacote 1kg",
+    "active": true,
+    "createdAt": "2025-09-22T02:19:16.706Z",
+    "updatedAt": "2025-09-22T02:19:16.841Z"
+  }
+]

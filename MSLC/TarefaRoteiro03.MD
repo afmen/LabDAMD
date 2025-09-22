@@ -138,16 +138,16 @@ Criar pelo menos 20 itens distribuídos nas categorias:
   "description": "string",
   "status": "active|completed|archived",
   "items": [
-    {
-      "itemId": "string",
-      "itemName": "string", // cache do nome
-      "quantity": "number",
-      "unit": "string",
-      "estimatedPrice": "number",
-      "purchased": "boolean",
-      "notes": "string",
-      "addedAt": "timestamp"
-    }
+      {
+        "itemId": "string",
+        "itemName": "string", // cache do nome
+        "quantity": "number",
+        "unit": "string",
+        "estimatedPrice": "number",
+        "purchased": "boolean",
+        "notes": "string",
+        "addedAt": "timestamp"
+      }
   ],
   "summary": {
     "totalItems": "number",

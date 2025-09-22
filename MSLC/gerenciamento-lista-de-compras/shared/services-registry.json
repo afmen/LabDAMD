@@ -1,0 +1,46 @@
+{
+  "item-service": {
+    "url": "http://127.0.0.1:3002",
+    "version": "1.0.0",
+    "database": "JSON-NoSQL",
+    "endpoints": [
+      "/health",
+      "/items",
+      "/categories",
+      "/search"
+    ],
+    "registeredAt": 1758508854174,
+    "lastHealthCheck": 1758509509973,
+    "healthy": true,
+    "pid": 4132
+  },
+  "list-service": {
+    "url": "http://127.0.0.1:3003",
+    "version": "1.0.0",
+    "database": "JSON-NoSQL",
+    "endpoints": [
+      "/health",
+      "/lists"
+    ],
+    "registeredAt": 1758508865402,
+    "lastHealthCheck": 1758509509984,
+    "healthy": true,
+    "pid": 16696
+  },
+  "user-service": {
+    "url": "http://localhost:3001",
+    "version": "1.0.0",
+    "database": "JSON-NoSQL",
+    "endpoints": [
+      "/health",
+      "/auth/register",
+      "/auth/login",
+      "/users",
+      "/search"
+    ],
+    "registeredAt": 1758508879500,
+    "lastHealthCheck": 1758509509995,
+    "healthy": true,
+    "pid": 3140
+  }
+}

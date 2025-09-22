@@ -34,18 +34,29 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/aluno-pucminas/gerenciamento-lista-de-compras.git"
+    "url": "git+https://github.com/aluno-pucminas/gerenciamento-lista-de-compras.git"
   },
   "engines": {
     "node": ">=16.0.0",
     "npm": ">=8.0.0"
   },
   "dependencies": {
-    "axios": "^1.6.0",
+    "axios": "^1.12.2",
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
     "fs-extra": "^11.1.0",
-    "uuid": "^9.0.0"
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.1",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "concurrently": "^7.6.0"
-  }
+    "concurrently": "^7.6.0",
+    "nodemon": "^3.1.10"
+  },
+  "bugs": {
+    "url": "https://github.com/aluno-pucminas/gerenciamento-lista-de-compras/issues"
+  },
+  "homepage": "https://github.com/aluno-pucminas/gerenciamento-lista-de-compras#readme"
 }

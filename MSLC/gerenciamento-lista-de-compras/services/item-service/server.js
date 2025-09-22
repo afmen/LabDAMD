@@ -16,7 +16,7 @@ class ItemService {
         this.port = process.env.PORT || 3002;
         this.serviceName = 'item-service';
         this.serviceUrl = `http://127.0.0.1:${this.port}`;
-        
+
         this.setupDatabase();
         this.setupMiddleware();
         this.setupRoutes();
@@ -30,122 +30,54 @@ class ItemService {
         console.log('Item Service: Banco NoSQL inicializado');
     }
 
-    /*async seedInitialData() {
-        // Aguardar inicialização e criar items exemplo
+    async seedInitialData() {
         setTimeout(async () => {
             try {
-                const existingItems = await this.ItemsDb.find();
-                
+                const existingItems = await this.itemsDb.find();
                 if (existingItems.length === 0) {
                     const sampleItems = [
-                        {
-                            id: uuidv4(),
-                            name: 'Smartphone Premium',
-                            description: 'Smartphone tela 6.1", 128GB, câmera 48MP',
-                            price: 1299.99,
-                            stock: 15,
-                            category: {
-                                name: 'Eletrônicos',
-                                slug: 'eletronicos'
-                            },
-                            images: [
-                                'https://via.placeholder.com/300x300?text=Smartphone+1',
-                                'https://via.placeholder.com/300x300?text=Smartphone+2'
-                            ],
-                            tags: ['smartphone', 'tecnologia', 'celular'],
-                            specifications: {
-                                brand: 'TechBrand',
-                                model: 'Premium X1',
-                                storage: '128GB',
-                                ram: '8GB',
-                                camera: '48MP'
-                            },
-                            active: true,
-                            featured: true
-                        },
-                        {
-                            id: uuidv4(),
-                            name: 'Notebook Gamer',
-                            description: 'Notebook Intel i7, 16GB RAM, RTX 3060',
-                            price: 3499.99,
-                            stock: 8,
-                            category: {
-                                name: 'Eletrônicos',
-                                slug: 'eletronicos'
-                            },
-                            images: [
-                                'https://via.placeholder.com/300x300?text=Notebook+1'
-                            ],
-                            tags: ['notebook', 'gamer', 'computador'],
-                            specifications: {
-                                brand: 'GameTech',
-                                processor: 'Intel i7',
-                                ram: '16GB',
-                                graphics: 'RTX 3060',
-                                storage: '512GB SSD'
-                            },
-                            active: true,
-                            featured: false
-                        },
-                        {
-                            id: uuidv4(),
-                            name: 'Fone Bluetooth',
-                            description: 'Fone sem fio com cancelamento de ruído',
-                            price: 299.99,
-                            stock: 25,
-                            category: {
-                                name: 'Acessórios',
-                                slug: 'acessorios'
-                            },
-                            images: [
-                                'https://via.placeholder.com/300x300?text=Fone+1'
-                            ],
-                            tags: ['fone', 'bluetooth', 'audio'],
-                            specifications: {
-                                brand: 'AudioMax',
-                                connectivity: 'Bluetooth 5.0',
-                                battery: '30h',
-                                noiseCancellation: true
-                            },
-                            active: true,
-                            featured: true
-                        },
-                        {
-                            id: uuidv4(),
-                            name: 'Camiseta Básica',
-                            description: 'Camiseta 100% algodão, várias cores',
-                            price: 39.99,
-                            stock: 50,
-                            category: {
-                                name: 'Roupas',
-                                slug: 'roupas'
-                            },
-                            images: [
-                                'https://via.placeholder.com/300x300?text=Camiseta+1'
-                            ],
-                            tags: ['camiseta', 'básica', 'algodão'],
-                            specifications: {
-                                material: '100% Algodão',
-                                sizes: ['P', 'M', 'G', 'GG'],
-                                colors: ['Branco', 'Preto', 'Azul', 'Verde']
-                            },
-                            active: true,
-                            featured: false
-                        }
+                        // Alimentos
+                        { id: uuidv4(), name: "Arroz Branco", category: "Alimentos", brand: "Tio João", unit: "kg", averagePrice: 25.90, barcode: "7891000100101", description: "Arroz tipo 1, pacote 5kg", active: true, createdAt: new Date().toISOString() },
+                        { id: uuidv4(), name: "Feijão Carioca", category: "Alimentos", brand: "Kicaldo", unit: "kg", averagePrice: 9.80, barcode: "7896000100102", description: "Feijão carioca tipo 1, pacote 1kg", active: true, createdAt: new Date().toISOString() },
+                        { id: uuidv4(), name: "Macarrão Espaguete", category: "Alimentos", brand: "Renata", unit: "kg", averagePrice: 6.50, barcode: "7897000100103", description: "Macarrão tipo espaguete, pacote 500g", active: true, createdAt: new Date().toISOString() },
+                        { id: uuidv4(), name: "Açúcar Refinado", category: "Alimentos", brand: "União", unit: "kg", averagePrice: 4.20, barcode: "7898000100104", description: "Açúcar refinado, pacote 1kg", active: true, createdAt: new Date().toISOString() },
+
+                        // Limpeza
+                        { id: uuidv4(), name: "Detergente Líquido", category: "Limpeza", brand: "Ypê", unit: "litro", averagePrice: 2.90, barcode: "7899000100105", description: "Detergente líquido neutro, frasco 500ml", active: true, createdAt: new Date().toISOString() },
+                        { id: uuidv4(), name: "Sabão em Pó", category: "Limpeza", brand: "Omo", unit: "kg", averagePrice: 24.50, barcode: "7891000200106", description: "Sabão em pó 2kg", active: true, createdAt: new Date().toISOString() },
+                        { id: uuidv4(), name: "Desinfetante", category: "Limpeza", brand: "Veja", unit: "litro", averagePrice: 7.90, barcode: "7892000200107", description: "Desinfetante pinho 1L", active: true, createdAt: new Date().toISOString() },
+                        { id: uuidv4(), name: "Água Sanitária", category: "Limpeza", brand: "QBoa", unit: "litro", averagePrice: 5.50, barcode: "7893000200108", description: "Água sanitária tradicional 2L", active: true, createdAt: new Date().toISOString() },
+
+                        // Higiene
+                        { id: uuidv4(), name: "Sabonete em Barra", category: "Higiene", brand: "Lux", unit: "un", averagePrice: 2.20, barcode: "7894000300109", description: "Sabonete perfumado 90g", active: true, createdAt: new Date().toISOString() },
+                        { id: uuidv4(), name: "Shampoo", category: "Higiene", brand: "Seda", unit: "litro", averagePrice: 15.00, barcode: "7895000300110", description: "Shampoo hidratação 325ml", active: true, createdAt: new Date().toISOString() },
+                        { id: uuidv4(), name: "Creme Dental", category: "Higiene", brand: "Colgate", unit: "un", averagePrice: 5.80, barcode: "7896000300111", description: "Creme dental 90g", active: true, createdAt: new Date().toISOString() },
+                        { id: uuidv4(), name: "Desodorante Roll-on", category: "Higiene", brand: "Nivea", unit: "un", averagePrice: 11.50, barcode: "7897000300112", description: "Desodorante antitranspirante 50ml", active: true, createdAt: new Date().toISOString() },
+
+                        // Bebidas
+                        { id: uuidv4(), name: "Refrigerante Cola", category: "Bebidas", brand: "Coca-Cola", unit: "litro", averagePrice: 9.00, barcode: "7898000400113", description: "Refrigerante 2L", active: true, createdAt: new Date().toISOString() },
+                        { id: uuidv4(), name: "Suco de Laranja", category: "Bebidas", brand: "Del Valle", unit: "litro", averagePrice: 7.80, barcode: "7899000400114", description: "Suco de laranja 1L", active: true, createdAt: new Date().toISOString() },
+                        { id: uuidv4(), name: "Água Mineral", category: "Bebidas", brand: "Crystal", unit: "litro", averagePrice: 2.50, barcode: "7891000400115", description: "Água mineral sem gás 500ml", active: true, createdAt: new Date().toISOString() },
+                        { id: uuidv4(), name: "Cerveja Pilsen", category: "Bebidas", brand: "Skol", unit: "litro", averagePrice: 5.00, barcode: "7892000400116", description: "Cerveja lata 350ml", active: true, createdAt: new Date().toISOString() },
+
+                        // Padaria
+                        { id: uuidv4(), name: "Pão Francês", category: "Padaria", brand: "Padaria Local", unit: "kg", averagePrice: 14.00, barcode: "7893000500117", description: "Pão francês fresco por kg", active: true, createdAt: new Date().toISOString() },
+                        { id: uuidv4(), name: "Bolo de Chocolate", category: "Padaria", brand: "Padaria Local", unit: "un", averagePrice: 30.00, barcode: "7894000500118", description: "Bolo de chocolate 1kg", active: true, createdAt: new Date().toISOString() },
+                        { id: uuidv4(), name: "Croissant", category: "Padaria", brand: "Padaria Local", unit: "un", averagePrice: 6.00, barcode: "7895000500119", description: "Croissant amanteigado", active: true, createdAt: new Date().toISOString() },
+                        { id: uuidv4(), name: "Pão de Queijo", category: "Padaria", brand: "Padaria Mineira", unit: "kg", averagePrice: 22.00, barcode: "7896000500120", description: "Pão de queijo congelado por kg", active: true, createdAt: new Date().toISOString() },
                     ];
 
                     for (const item of sampleItems) {
                         await this.itemsDb.create(item);
                     }
 
-                    console.log('Items de exemplo criados no Item Service');
+                    console.log('Itens iniciais criados com sucesso!');
                 }
             } catch (error) {
                 console.error('Erro ao criar dados iniciais:', error);
             }
         }, 1000);
-    }*/
-
+    }
     setupMiddleware() {
         this.app.use(helmet());
         this.app.use(cors());
@@ -168,7 +100,7 @@ class ItemService {
             try {
                 const itemCount = await this.itemsDb.count();
                 const activeItems = await this.itemsDb.count({ active: true });
-                
+
                 res.json({
                     service: this.serviceName,
                     status: 'healthy',
@@ -203,7 +135,7 @@ class ItemService {
                     'POST /items',
                     'PUT /items/:id',
                     //'DELETE /items/:id',
-                    //'PUT /items/:id/stock',
+                    //'PUT /items/:id/brand',
                     'GET /categories',
                     'GET /search?=termo'
                 ]
@@ -215,8 +147,8 @@ class ItemService {
         this.app.get('/items/:id', this.getItem.bind(this));
         this.app.post('/items', this.authMiddleware.bind(this), this.createItem.bind(this));
         this.app.put('/items/:id', this.authMiddleware.bind(this), this.updateItem.bind(this));
-        this.app.delete('/items/:id', this.authMiddleware.bind(this), this.deleteItem.bind(this));
-        this.app.put('/items/:id/stock', this.authMiddleware.bind(this), this.updateStock.bind(this));
+        //this.app.delete('/items/:id', this.authMiddleware.bind(this), this.deleteItem.bind(this));
+        //this.app.put('/items/:id/brand', this.authMiddleware.bind(this), this.updateBrand.bind(this));
 
         // Category routes (extraídas dos items)
         this.app.get('/categories', this.getCategories.bind(this));
@@ -247,7 +179,7 @@ class ItemService {
     // Auth middleware (valida token com User Service)
     async authMiddleware(req, res, next) {
         const authHeader = req.header('Authorization');
-        
+
         if (!authHeader?.startsWith('Bearer ')) {
             return res.status(401).json({
                 success: false,
@@ -258,7 +190,7 @@ class ItemService {
         try {
             // Descobrir User Service
             const userService = serviceRegistry.discover('user-service');
-            
+
             // Validar token com User Service
             const response = await axios.post(`${userService.url}/auth/validate`, {
                 token: authHeader.replace('Bearer ', '')
@@ -285,55 +217,55 @@ class ItemService {
     // Get items (com filtros e paginação)
     async getItems(req, res) {
         try {
-            const { 
-                page = 1, 
-                limit = 10, 
-                category, 
-                minPrice, 
-                maxPrice, 
+            const {
+                page = 1,
+                limit = 10,
+                category,
+                minAveragePrice,
+                maxAveragePrice,
                 search,
                 active = true,
-                featured
+                //featured
             } = req.query;
-            
+
             const skip = (page - 1) * parseInt(limit);
-            
+
             // Filtros NoSQL flexíveis
             const filter = { active: active === 'true' };
 
             // Filtrar por categoria
             if (category) {
-                filter['category.slug'] = category;
+                filter['category'] = category;
             }
 
             // Filtrar por destaque
-            if (featured !== undefined) {
+            /*if (featured !== undefined) {
                 filter.featured = featured === 'true';
-            }
+            }*/
 
             // Filtrar por preço
-            if (minPrice) {
-                filter.price = { $gte: parseFloat(minPrice) };
+            if (minAveragePrice) {
+                filter.averagePrice = { $gte: parseFloat(minAveragePrice) };
             }
-            if (maxPrice) {
-                if (filter.price) {
-                    filter.price.$lte = parseFloat(maxPrice);
+            if (maxAveragePrice) {
+                if (filter.averagePrice) {
+                    filter.averagePrice.$lte = parseFloat(maxAveragePrice);
                 } else {
-                    filter.price = { $lte: parseFloat(maxPrice) };
+                    filter.averagePrice = { $lte: parseFloat(maxAveragePrice) };
                 }
             }
 
             let items;
-            
+
             // Se há busca por texto, usar método de search
             if (search) {
-                items = await this.itemsDb.search(search, ['name', 'description', 'tags']);
+                items = await this.itemsDb.search(search, ['name', 'category', 'brand', 'description']);
                 // Aplicar outros filtros manualmente
                 items = items.filter(item => {
                     for (const [key, value] of Object.entries(filter)) {
-                        if (key === 'price') {
-                            if (value.$gte && item.price < value.$gte) return false;
-                            if (value.$lte && item.price > value.$lte) return false;
+                        if (key === 'averagePrice') {
+                            if (value.$gte && item.averagePrice < value.$gte) return false;
+                            if (value.$lte && item.averagePrice > value.$lte) return false;
                         } else if (key.includes('.')) {
                             // Campos aninhados (ex: category.slug)
                             const keys = key.split('.');
@@ -405,22 +337,25 @@ class ItemService {
     // Create item (demonstrando schema NoSQL flexível)
     async createItem(req, res) {
         try {
-            const { 
-                name, 
-                description, 
-                price, 
-                stock, 
-                category, 
-                images, 
-                tags, 
-                specifications,
-                featured = false
+            const {
+                name,
+                //price, 
+                //stock, 
+                category,
+                brand,
+                unit,
+                averagePrice,
+                barcode,
+                description,
+                //images, 
+                //specifications,
+                //featured = false
             } = req.body;
 
-            if (!name || !price) {
+            if (!name || !category || !unit || !averagePrice) {
                 return res.status(400).json({
                     success: false,
-                    message: 'Nome e preço são obrigatórios'
+                    message: 'Nome, categoria, unidade e preço médio são obrigatórios'
                 });
             }
 
@@ -428,19 +363,14 @@ class ItemService {
             const newItem = await this.itemsDb.create({
                 id: uuidv4(),
                 name,
+                category,        // string simples
+                brand,
+                unit,            // "kg", "un", "litro"
+                averagePrice,
+                barcode,
                 description: description || '',
-                price: parseFloat(price),
-                stock: parseInt(stock) || 0,
-                category: category || { name: 'Geral', slug: 'geral' },
-                images: Array.isArray(images) ? images : (images ? [images] : []),
-                tags: Array.isArray(tags) ? tags : (tags ? [tags] : []),
-                specifications: specifications || {},
                 active: true,
-                featured: featured,
-                metadata: {
-                    createdBy: req.user.id,
-                    createdByName: `${req.user.firstName} ${req.user.lastName}`
-                }
+                createdAt: new Date().toISOString()
             });
 
             res.status(201).json({
@@ -461,17 +391,15 @@ class ItemService {
     async updateItem(req, res) {
         try {
             const { id } = req.params;
-            const { 
-                name, 
-                description, 
-                price, 
-                stock, 
-                category, 
-                images, 
-                tags, 
-                specifications,
-                active,
-                featured
+            const {
+                name,
+                category,
+                brand,
+                unit,
+                averagePrice,
+                barcode,
+                description,
+                active
             } = req.body;
 
             const item = await this.itemsDb.findById(id);
@@ -485,22 +413,13 @@ class ItemService {
             // Updates flexíveis com NoSQL
             const updates = {};
             if (name !== undefined) updates.name = name;
-            if (description !== undefined) updates.description = description;
-            if (price !== undefined) updates.price = parseFloat(price);
-            if (stock !== undefined) updates.stock = parseInt(stock);
             if (category !== undefined) updates.category = category;
-            if (images !== undefined) {
-                updates.images = Array.isArray(images) ? images : (images ? [images] : []);
-            }
-            if (tags !== undefined) {
-                updates.tags = Array.isArray(tags) ? tags : (tags ? [tags] : []);
-            }
-            if (specifications !== undefined) {
-                // Merge com especificações existentes
-                updates.specifications = { ...item.specifications, ...specifications };
-            }
+            if (brand !== undefined) updates.brand = brand;
+            if (unit !== undefined) updates.unit = unit;
+            if (averagePrice !== undefined) updates.averagePrice = averagePrice;
+            if (barcode !== undefined) updates.barcode = barcode;
+            if (description !== undefined) updates.description = description;
             if (active !== undefined) updates.active = active;
-            if (featured !== undefined) updates.featured = featured;
 
             // Adicionar metadata de atualização
             updates['metadata.lastUpdatedBy'] = req.user.id;
@@ -537,7 +456,7 @@ class ItemService {
             }
 
             // Soft delete - desativar item
-            await this.itemsDb.update(id, { 
+            await this.itemsDb.update(id, {
                 active: false,
                 'metadata.deletedBy': req.user.id,
                 'metadata.deletedByName': `${req.user.firstName} ${req.user.lastName}`,
@@ -557,11 +476,18 @@ class ItemService {
         }
     }
 
-    // Update stock
-    async updateStock(req, res) {
+    // Update brand
+    async updateBrand(req, res) {
         try {
             const { id } = req.params;
-            const { quantity, operation = 'set' } = req.body;
+            const { brand } = req.body;
+
+            if (!brand || typeof brand !== 'string') {
+                return res.status(400).json({
+                    success: false,
+                    message: 'A nova marca deve ser fornecida como string'
+                });
+            }
 
             const item = await this.itemsDb.findById(id);
             if (!item) {
@@ -571,40 +497,25 @@ class ItemService {
                 });
             }
 
-            let newStock = item.stock;
-            
-            switch (operation) {
-                case 'add':
-                    newStock += parseInt(quantity);
-                    break;
-                case 'subtract':
-                    newStock = Math.max(0, newStock - parseInt(quantity));
-                    break;
-                case 'set':
-                default:
-                    newStock = parseInt(quantity);
-                    break;
-            }
+            const previousBrand = item.brand;
 
-            await this.itemsDb.update(id, { 
-                stock: newStock,
-                'metadata.lastStockUpdate': new Date().toISOString(),
-                'metadata.lastStockUpdateBy': req.user.id
+            const updatedItem = await this.itemsDb.update(id, {
+                brand: brand,
+                'metadata.lastBrandUpdate': new Date().toISOString(),
+                'metadata.lastBrandUpdateBy': req.user.id
             });
 
             res.json({
                 success: true,
-                message: 'Estoque atualizado com sucesso',
+                message: 'Marca atualizada com sucesso',
                 data: {
                     itemId: id,
-                    previousStock: item.stock,
-                    newStock: newStock,
-                    operation: operation,
-                    quantity: parseInt(quantity)
+                    previousBrand: previousBrand,
+                    newBrand: updatedItem.brand
                 }
             });
         } catch (error) {
-            console.error('Erro ao atualizar estoque:', error);
+            console.error('Erro ao atualizar marca:', error);
             res.status(500).json({
                 success: false,
                 message: 'Erro interno do servidor'
@@ -615,38 +526,14 @@ class ItemService {
     // Get categories (extraídas dos Items)
     async getCategories(req, res) {
         try {
-            const items = await this.itemsDb.find({ active: true });
-            
-            // Extrair categorias únicas dos items (demonstrando flexibilidade NoSQL)
-            const categoriesMap = new Map();
-            items.forEach(item => {
-                if (item.category) {
-                    const key = item.category.slug || item.category.name;
-                    if (!categoriesMap.has(key)) {
-                        categoriesMap.set(key, {
-                            name: item.category.name,
-                            slug: item.category.slug || item.category.name.toLowerCase().replace(/\s+/g, '-'),
-                            itemCount: 0
-                        });
-                    }
-                    categoriesMap.get(key).itemCount++;
-                }
-            });
-
-            const categories = Array.from(categoriesMap.values())
-                .sort((a, b) => a.name.localeCompare(b.name));
-            
-            res.json({
-                success: true,
-                data: categories
-            });
+            const items = await this.itemsDb.find();
+            const categories = [...new Set(items.map(item => item.category))];
+            res.json(categories);
         } catch (error) {
-            console.error('Erro ao buscar categorias:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Erro interno do servidor'
-            });
+            console.error("Erro ao listar categorias:", error);
+            res.status(500).json({ error: "Erro ao listar categorias" });
         }
+
     }
 
     // Search items (demonstrando busca NoSQL)
@@ -662,17 +549,16 @@ class ItemService {
             }
 
             // Busca full-text NoSQL
-            let items = await this.itemsDb.search(q, ['name', 'description', 'tags']);
-            
+            let items = await this.itemsDb.search(q, ['name', 'category', 'brand', 'description']);
+
             // Filtrar apenas items ativos
             items = items.filter(item => item.active);
 
             // Filtrar por categoria se especificada
             if (category) {
-                items = items.filter(item => 
-                    item.category?.slug === category || item.category?.name === category
-                );
+                items = items.filter(item => item.category === category);
             }
+
 
             // Aplicar limite
             items = items.slice(0, parseInt(limit));
@@ -720,7 +606,7 @@ class ItemService {
             console.log(`Health: ${this.serviceUrl}/health`);
             console.log(`Database: JSON-NoSQL`);
             console.log('=====================================');
-            
+
             // Register with service registry
             this.registerWithRegistry();
             this.startHealthReporting();

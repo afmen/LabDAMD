@@ -1,0 +1,16 @@
+[
+  {
+    "id": "5e747f7c-5af3-47b5-9165-b54ba7496c88",
+    "email": "teste@puc.com",
+    "username": "teste",
+    "password": "$2a$12$XSG2zPcWWONwB0NZNZoSruJYfIQ8iiHtvjxmQTqJsCRzLtxXX68Vy",
+    "firstName": "Teste",
+    "lastName": "Aluno",
+    "preferences": {
+      "defaultStore": null,
+      "currency": "BRL"
+    },
+    "createdAt": "2025-09-22T02:43:19.781Z",
+    "updatedAt": "2025-09-22T02:43:19.782Z"
+  }
+]
